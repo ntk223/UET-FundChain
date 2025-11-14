@@ -1,0 +1,37 @@
+{
+  "name": "blockchainproject",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "hardhat test",
+    "test:verbose": "hardhat test --verbose",
+    "test:gas": "REPORT_GAS=true hardhat test",
+    "compile": "hardhat compile",
+    "deploy:local": "hardhat run scripts/deploy.js --network localhost",
+    "deploy:sample": "CREATE_SAMPLE_CAMPAIGN=true hardhat run scripts/deploy.js --network localhost",
+    "interact": "hardhat run scripts/interact.js --network localhost",
+    "donate": "hardhat run scripts/donate.js --network localhost",
+    "create": "hardhat run scripts/createCampaign.js --network localhost",
+    "refund": "hardhat run scripts/refund.js --network localhost",
+    "info": "hardhat run scripts/info.js --network localhost",
+    "proposal": "hardhat run scripts/proposal.js --network localhost",
+    "execute": "hardhat run scripts/executeProposal.js --network localhost",
+    "node": "hardhat node",
+    "frontend:install": "cd frontend && npm install",
+    "frontend:start": "cd frontend && npm start",
+    "frontend:build": "cd frontend && npm run build"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "hardhat": "^2.22.4"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^5.4.0",
+    "dotenv": "^17.2.3"
+  }
+}
