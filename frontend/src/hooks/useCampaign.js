@@ -64,14 +64,47 @@ export const CampaignProvider = ({ children }) => {
       return false;
     }
   }, []);
-
+  const createProposal = useCallback(async (campaignAddress, description, amount, recipient) => {
+    try {
+      const tx = await contractService.createProposal(campaignAddress, description, amount, recipient);
+      toast.success('Proposal created successfully!');
+      return true;
+    } catch (error) {
+      console.error('Lỗi tạo đề xuất:', error);
+      toast.error('Failed to create proposal.');
+      return false;
+    }
+  }, []);
+  const getAllProposals = useCallback(async (campaignAddress) => {
+    try {
+      const proposals = await contractService.getAllProposals(campaignAddress);
+      return proposals;
+    } catch (error) {
+      console.error('Lỗi lấy đề xuất:', error);
+      return [];
+    }
+  }, []);
+  const vote = useCallback(async (campaignAddress, proposalIndex, support) => {
+    try {
+      const tx = await contractService.vote(campaignAddress, proposalIndex, support);
+      toast.success('Voted successfully!');
+      return true;
+    } catch (error) {
+      console.error('Lỗi khi vote:', error);
+      toast.error('Failed to vote.');
+      return false;
+    }
+  }, []);
   const contextValue = useMemo(() => ({
     campaigns,
     getCampaignDetails,
     createCampaign,
     donate,
     fetchCampaigns,
-  }), [campaigns, getCampaignDetails, createCampaign, donate, fetchCampaigns]);
+    createProposal,
+    getAllProposals,
+    vote
+  }), [campaigns, getCampaignDetails, createCampaign, donate, fetchCampaigns, createProposal, getAllProposals, vote]);
 
   return (
     <CampaignContext.Provider value={contextValue}>

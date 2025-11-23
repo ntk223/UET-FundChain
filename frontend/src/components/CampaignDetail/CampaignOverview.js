@@ -10,7 +10,7 @@ const CampaignOverview = React.memo(({ campaign, timeRemaining }) => {
           <div>
             <p className="text-sm text-gray-600">Ngày tạo</p>
             <p className="font-medium">
-              Thêm mới ngày tạo ở đây
+              {new Date(campaign.createdAt * 1000).toLocaleDateString("vi-VN")}
             </p>
           </div>
         </div>

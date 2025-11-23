@@ -113,7 +113,7 @@ const CampaignCard = ({ campaign }) => {
       {/* Mô tả campaign */}
       <div className="mb-4">
         <p className="text-gray-700 text-sm leading-relaxed line-clamp-2 mb-3">
-          {campaignDetails.description || 'Không có mô tả'}
+          {campaignDetails.campaignDescription || 'Không có mô tả'}
         </p>
       </div>
 

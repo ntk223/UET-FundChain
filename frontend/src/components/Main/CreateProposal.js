@@ -1,20 +1,24 @@
-
-const CreateProposal = () => {
+import { useState } from 'react';
+import { X } from 'lucide-react';
+import { useCampaign } from '../../hooks/useCampaign.js';
+const CreateProposal = ({campaignAddress, onClose}) => {
+  const { createProposal } = useCampaign();
   const [formData, setFormData] = useState({
     description: '',
     amount: '',
     recipient: ''
   });
   const [loading, setLoading] = useState(false);
-
+  const [open, setOpen] = useState(true);
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
-      // Gọi hàm tạo đề xuất từ contract ở đây
+      await createProposal(campaignAddress, formData.description, formData.amount, formData.recipient);
       console.log('Đề xuất được tạo:', formData);
       // Reset form sau khi tạo đề xuất thành công
       setFormData({ description: '', amount: '', recipient: '' });
+      onClose();
     } catch (error) {
       console.error('Lỗi khi tạo đề xuất:', error);
     }
@@ -27,7 +31,7 @@ const CreateProposal = () => {
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold text-gray-800">Tạo Đề Xuất Mới</h2>
           <button
-            onClick={() => {}}
+            onClick={onClose}
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
           >
             <X className="w-5 h-5" />

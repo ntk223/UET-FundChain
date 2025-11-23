@@ -174,7 +174,9 @@ class ContractService {
         isActive,
         isSuccessful,
         status,
-        progress: (Number(ethers.formatEther(totalRaised)) / Number(ethers.formatEther(targetAmount))) * 100
+        progress: (Number(ethers.formatEther(totalRaised)) / Number(ethers.formatEther(targetAmount))) * 100,
+        campaignDescription,
+        createdAt: Number(createdAt)
       };
       
       console.log('Processed campaign data:', campaignData);
@@ -435,6 +437,26 @@ async donate(campaignAddress, amount) {
     }
   }
 
+  async getAllProposals(campaignAddress) {
+    try {
+      await this.ensureInitialized();
+      
+      const campaign = new ethers.Contract(campaignAddress, CAMPAIGN_ABI, this.provider);
+      const proposalCount = await campaign.nextProposalId();
+      
+      const proposals = [];
+      for (let i = 0; i < proposalCount; i++) {
+        const proposal = await this.getProposal(campaignAddress, i);
+        proposals.push(proposal);
+      }
+      
+      return proposals;
+    } catch (error) {
+      console.error('Lỗi lấy danh sách đề xuất:', error);
+      return [];
+    }
+  }
+
   // --- EVENT LISTENERS ---
 
   // Lắng nghe sự kiện Donated sử dụng polling
@@ -602,6 +624,8 @@ async donate(campaignAddress, amount) {
       if (!isActive) return;
       
       try {
+          await this.ensureInitialized();
+
         const currentBlock = await this.provider.getBlockNumber();
         if (lastBlockNumber === 0) {
           lastBlockNumber = currentBlock - 5; // Bắt đầu từ 5 blocks trước

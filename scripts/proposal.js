@@ -1,10 +1,10 @@
 const {ethers} = require("hardhat");
 
 async function main() {
-    const campaignAddress = "0xCafac3dD18aC6c6e92c921884f9E4176737C052c"
+    const campaignAddress = "0xB7A5bd0345EF1Cc5E66bf61BdeC17D2461fBd968"
     const campaign = await ethers.getContractAt("Campaign", campaignAddress);
 
-    const owner = await campaign.beneficiary();
+    const owner = await campaign.owner();
     console.log(`Chủ sở hữu chiến dịch là: ${owner}`);
 
     const proposalDescription = "Mua thêm thiết bị y tế";

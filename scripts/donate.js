@@ -1,7 +1,7 @@
 const {ethers} = require("hardhat");
 
 async function main() {
-    const campaignAddress = "0xCafac3dD18aC6c6e92c921884f9E4176737C052c"
+    const campaignAddress = "0xB7A5bd0345EF1Cc5E66bf61BdeC17D2461fBd968"
     const campaign = await ethers.getContractAt("Campaign", campaignAddress);
     const donationAmount = ethers.parseEther("10.0");
 
@@ -18,4 +18,3 @@ main().catch((error) => {
     console.error(error);
     process.exitCode = 1;
 });
- 

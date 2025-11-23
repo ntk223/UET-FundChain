@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Users, Wallet, TrendingUp, Copy, Check } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth.js';
-import contractService from '../../utils/contractService.js';
 import toast from 'react-hot-toast';
 
 const DonorsList = ({ donors = [], loading = false }) => {

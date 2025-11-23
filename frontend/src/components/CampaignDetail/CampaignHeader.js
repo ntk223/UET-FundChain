@@ -50,7 +50,7 @@ const CampaignHeader = ({ campaign, status }) => {
       <div className="mb-6">
         <h3 className="text-lg font-semibold text-gray-800 mb-2">Mô tả dự án</h3>
         <p className="text-gray-700 leading-relaxed">
-          {campaign.description || 'Không có mô tả cho campaign này.'}
+          {campaign.campaignDescription || 'Không có mô tả cho campaign này.'}
         </p>
       </div>
     </div>
