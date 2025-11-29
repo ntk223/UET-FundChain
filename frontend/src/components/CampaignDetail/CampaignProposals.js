@@ -1,73 +1,160 @@
-import { Plus, Vote } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
 import { useAuth } from '../../hooks/useAuth.js';
 import { useCampaign } from '../../hooks/useCampaign.js';
-import { useEffect, useState } from 'react';
+import contractService from '../../utils/contractService.js';
+import toast from 'react-hot-toast';
+
+// Import components
+import VotersModal from './VotersModal.js';
+import CreateProposalBanner from './CreateProposalBanner.js';
+import ProposalLoadingState from './ProposalLoadingState.js';
+import EmptyProposalsState from './EmptyProposalsState.js';
+import ProposalsList from './ProposalsList.js';
 const CampaignProposals = ({ campaign, status, onCreateProposal }) => {
   const { account } = useAuth();
-  const { getAllProposals, vote } = useCampaign();
+  const { getAllProposals, vote, executeProposal } = useCampaign();
   const [proposals, setProposals] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [votingStatus, setVotingStatus] = useState({}); // Theo dõi trạng thái vote cho từng proposal
+  const [executing, setExecuting] = useState({}); // Theo dõi trạng thái execute
+  const [selectedProposal, setSelectedProposal] = useState(null);
+  const [showVotersModal, setShowVotersModal] = useState(false);
 
   useEffect(() => {
     const fetchProposals = async () => {
-      const data = await getAllProposals(campaign.address);
-      setProposals(data);
+      if (!campaign?.address) return;
+      
+      setLoading(true);
+      try {
+        const data = await getAllProposals(campaign.address);
+        setProposals(data);
+        
+        // Kiểm tra trạng thái vote cho từng proposal
+        if (account && data.length > 0) {
+          const votingStatusMap = {};
+          for (let i = 0; i < data.length; i++) {
+            const hasVoted = await contractService.hasVoted(campaign.address, i, account);
+            const canExecute = await contractService.canExecuteProposal(campaign.address, i);
+            votingStatusMap[i] = { hasVoted, canExecute };
+          }
+          setVotingStatus(votingStatusMap);
+        }
+      } catch (error) {
+        console.error('Error fetching proposals:', error);
+        toast.error('Không thể tải danh sách đề xuất');
+      } finally {
+        setLoading(false);
+      }
     };
+    
     fetchProposals();
-  }, [campaign.address, getAllProposals]);
+  }, [campaign.address, getAllProposals, account]);
+
+  // Xử lý vote
+  const handleVote = async (proposalId, support) => {
+    if (!account) {
+      toast.error('Vui lòng kết nối ví');
+      return;
+    }
+
+    if (votingStatus[proposalId]?.hasVoted) {
+      toast.error('Bạn đã vote cho đề xuất này rồi');
+      return;
+    }
+
+    try {
+      setVotingStatus(prev => ({
+        ...prev,
+        [proposalId]: { ...prev[proposalId], voting: true }
+      }));
+
+      await vote(campaign.address, proposalId, support);
+      toast.success(`Vote ${support ? 'ủng hộ' : 'phản đối'} thành công!`);
+      
+      // Refresh data
+      setTimeout(() => {
+        window.location.reload(); // Temporary solution, có thể optimize sau
+      }, 2000);
+
+    } catch (error) {
+      console.error('Vote error:', error);
+      toast.error('Lỗi khi vote: ' + error.message);
+    } finally {
+      setVotingStatus(prev => ({
+        ...prev,
+        [proposalId]: { ...prev[proposalId], voting: false }
+      }));
+    }
+  };
+
+  // Xử lý execute proposal
+  const handleExecute = async (proposalId) => {
+    if (!account || account.toLowerCase() !== campaign.owner.toLowerCase()) {
+      toast.error('Chỉ chủ campaign mới có thể thực hiện đề xuất');
+      return;
+    }
+
+    try {
+      setExecuting(prev => ({ ...prev, [proposalId]: true }));
+      
+      await executeProposal(campaign.address, proposalId);
+      toast.success('Thực hiện đề xuất thành công!');
+      
+      // Refresh data
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
+
+    } catch (error) {
+      console.error('Execute error:', error);
+      toast.error('Lỗi khi thực hiện đề xuất: ' + error.message);
+    } finally {
+      setExecuting(prev => ({ ...prev, [proposalId]: false }));
+    }
+  };
+
+  // Hiển thị voters modal
+  const showVoters = (proposal, proposalId) => {
+    setSelectedProposal({ ...proposal, proposalId });
+    setShowVotersModal(true);
+  };
 
   if (loading) {
-    return (
-      <div className="text-center py-8 text-gray-500">
-        <p>Đang tải đề xuất...</p>
-      </div>
-    );
+    return <ProposalLoadingState />;
   }
 
-  if (proposals.length === 0) {}
   return (
     <div className="space-y-4">
+      {/* Owner Actions - Create Proposal */}
       {account === campaign.owner && status.status === 'success' && (
-        <div className="bg-gradient-to-r from-[#667eea]/10 to-[#764ba2]/10 border border-[#667eea]/30 rounded-lg p-4 backdrop-blur-sm">
-          <p className="text-gray-700 mb-3">
-            Campaign đã thành công! Bạn có thể tạo đề xuất để sử dụng số tiền đã gây được.
-          </p>
-          <button
-            onClick={onCreateProposal}
-            className="btn btn-primary"
-          >
-            <Plus className="w-4 h-4" />
-            Tạo đề xuất mới
-          </button>
-        </div>
+        <CreateProposalBanner onCreateProposal={onCreateProposal} />
       )}
       
-      <div className="text-center py-8 text-gray-500">
+      {/* Proposals Content */}
+      {proposals.length === 0 ? (
+        <EmptyProposalsState />
+      ) : (
+        <ProposalsList
+          proposals={proposals}
+          votingStatus={votingStatus}
+          executing={executing}
+          account={account}
+          campaign={campaign}
+          onVote={handleVote}
+          onExecute={handleExecute}
+          onShowVoters={showVoters}
+        />
+      )}
 
-        {proposals.length === 0 ? (
-          <>
-            <Vote className="w-12 h-12 mx-auto mb-4 opacity-50" />
-            <p>Chưa có đề xuất nào được tạo</p>
-            <p className="text-sm">Đề xuất sẽ xuất hiện khi campaign thành công</p>
-          </>
-        ) : (
-          proposals.map((proposal, index) => (
-
-            <div key={index} className="border border-gray-300 rounded-lg p-4 ">
-              <h4 className="font-semibold text-gray-800 mb-2 text-left">Đề xuất #{index + 1}</h4>
-              <p className="text-gray-700 mb-1 text-left"><span className="font-medium">Mô tả:</span> {proposal.description}</p>
-              <p className="text-gray-700 mb-1 text-left"><span className="font-medium">Số tiền (ETH):</span> {proposal.amount}</p>
-              <p className="text-gray-700 text-left"><span className="font-medium">Người nhận:</span> {proposal.recipient}</p>
-              <div className="mt-3 flex gap-2">
-                <button onClick={() => vote(campaign.address, index, true)} className="btn btn-primary btn-sm hover:bg-blue-700 transition-colors">Ủng hộ</button>
-                <button onClick={() => vote(campaign.address, index, false)} className="btn btn-outline btn-sm hover:bg-gray-200 transition-colors">Không ủng hộ</button>
-              </div>
-
-
-            </div>
-          ))
-        )}
-      </div>
+      {/* Voters Modal */}
+      {showVotersModal && selectedProposal && (
+        <VotersModal
+          isOpen={showVotersModal}
+          onClose={() => setShowVotersModal(false)}
+          proposal={selectedProposal}
+          proposalId={selectedProposal.proposalId}
+        />
+      )}
     </div>
   );
 };

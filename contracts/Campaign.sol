@@ -11,7 +11,7 @@ contract Campaign {
     uint256 public immutable targetAmount;          // Mục tiêu cần đạt
     uint256 public immutable deadline;              // Thời điểm kết thúc chiến dịch
     uint256 public totalRaised;                     // Tổng số tiền đã huy động
-    string public campaignDescription;        // Mô tả chiến dịch
+    string public campaignDescription;              // Mô tả chiến dịch
     uint256 public createdAt;                      // Thời điểm tạo chiến dịch
     
 
@@ -28,6 +28,7 @@ contract Campaign {
         uint256 voteYes;             // Tổng số phiếu ủng hộ (tính theo số tiền donate)
         uint256 voteNo;              // Tổng số phiếu phản đối
         bool executed;               // Đề xuất đã được thực hiện hay chưa
+        address[] voters;          // Danh sách người đã bỏ phiếu
         mapping(address => bool) voted; // Tránh double-vote
     }
 
@@ -105,6 +106,14 @@ contract Campaign {
     }
 
     // --- 4. Bỏ phiếu cho đề xuất ---
+    function _sqrt(uint256 x) internal pure returns (uint256 y) {
+        uint256 z = (x + 1) / 2;
+        y = x;
+        while (z < y) {
+            y = z;
+            z = (x / z + z) / 2;
+        }
+    }
     function vote(uint256 proposalId, bool support) external {
         Proposal storage p = proposals[proposalId];
 
@@ -112,7 +121,7 @@ contract Campaign {
         require(!p.voted[msg.sender], "Already voted");
         require(!p.executed, "Proposal executed");
 
-        uint256 weight = contributions[msg.sender];
+        uint256 weight = _sqrt(contributions[msg.sender]);
         p.voted[msg.sender] = true;
 
         if (support) {
@@ -120,6 +129,7 @@ contract Campaign {
         } else {
             p.voteNo += weight;
         }
+        p.voters.push(msg.sender);
 
         emit Voted(msg.sender, proposalId, support, weight);
     }
@@ -127,10 +137,11 @@ contract Campaign {
     // --- 5. Thực hiện đề xuất nếu được thông qua ---
     function executeProposal(uint256 proposalId) external {
         Proposal storage p = proposals[proposalId];
-
+        require (p.voters.length > donors.length / 2, "Not enough voters");
         require(!p.executed, "Already executed");
         require(p.voteYes > p.voteNo, "Proposal not approved");
         require(p.amount <= address(this).balance, "Insufficient funds");
+        
 
         p.executed = true;
 
@@ -149,6 +160,10 @@ contract Campaign {
         return donors.length;
     }
 
+    function getTotalUsed() external view returns (uint256) {
+        return totalRaised - address(this).balance;
+    }
+
     function getProposal(uint256 proposalId)
         external
         view
@@ -163,5 +178,15 @@ contract Campaign {
     {
         Proposal storage p = proposals[proposalId];
         return (p.description, p.amount, p.recipient, p.voteYes, p.voteNo, p.executed);
+    }
+
+    function isVoted (uint256 proposalId, address voter) external view returns (bool) {
+        Proposal storage p = proposals[proposalId];
+        return p.voted[voter];
+    }
+
+    function getVoterCount(uint256 proposalId) external view returns (uint256) {
+        Proposal storage p = proposals[proposalId];
+        return p.voters.length;
     }
 }

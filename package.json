@@ -17,6 +17,7 @@
     "info": "hardhat run scripts/info.js --network localhost",
     "proposal": "hardhat run scripts/proposal.js --network localhost",
     "execute": "hardhat run scripts/executeProposal.js --network localhost",
+    "testscript": "hardhat run scripts/index.js --network localhost",
     "node": "hardhat node",
     "frontend:install": "cd frontend && npm install",
     "frontend:start": "cd frontend && npm start",

@@ -95,6 +95,19 @@ export const CampaignProvider = ({ children }) => {
       return false;
     }
   }, []);
+
+  const executeProposal = useCallback(async (campaignAddress, proposalId) => {
+    try {
+      const tx = await contractService.executeProposal(campaignAddress, proposalId);
+      toast.success('Proposal executed successfully!');
+      return true;
+    } catch (error) {
+      console.error('Lỗi khi execute proposal:', error);
+      toast.error('Failed to execute proposal.');
+      return false;
+    }
+  }, []);
+
   const contextValue = useMemo(() => ({
     campaigns,
     getCampaignDetails,
@@ -103,8 +116,9 @@ export const CampaignProvider = ({ children }) => {
     fetchCampaigns,
     createProposal,
     getAllProposals,
-    vote
-  }), [campaigns, getCampaignDetails, createCampaign, donate, fetchCampaigns, createProposal, getAllProposals, vote]);
+    vote,
+    executeProposal
+  }), [campaigns, getCampaignDetails, createCampaign, donate, fetchCampaigns, createProposal, getAllProposals, vote, executeProposal]);
 
   return (
     <CampaignContext.Provider value={contextValue}>

@@ -1,7 +1,6 @@
 const {ethers} = require("hardhat");
 
-async function main() {
-    const campaignAddress = "0xB7A5bd0345EF1Cc5E66bf61BdeC17D2461fBd968"
+async function info(campaignAddress) {
     const campaign = await ethers.getContractAt("Campaign", campaignAddress);
     console.log(`🎯 Thông tin chi tiết Campaign tại địa chỉ: ${campaignAddress}\n`)
     console.log(`Người tạo: ${await campaign.owner()}`);
@@ -16,13 +15,6 @@ async function main() {
     console.log(`Mô tả chiến dịch: ${await campaign.campaignDescription()}\n`);
 
     console.log("📋 Danh sách người quyên góp:");
-    // const [owner, donator1, donator2] = await ethers.getSigners();
-    // const amount1 = await campaign.contributions(donator1.address);
-    // const amount2 = await campaign.contributions(donator2.address);
-    // console.log(campaign.donors());
-    // console.log("Danh sách người quyên góp và số tiền họ đã đóng góp:");
-    // console.log(`- Địa chỉ: ${donator1.address}, Số tiền đóng góp: ${ethers.formatEther(amount1)} ETH`);
-    // console.log(`- Địa chỉ: ${donator2.address}, Số tiền đóng góp: ${ethers.formatEther(amount2)} ETH`);
 
     const donors = await campaign.getDonorCount();
     console.log("Tổng số:", donors);
@@ -33,9 +25,17 @@ async function main() {
         console.log(`- Địa chỉ: ${donor}, Số tiền đóng góp: ${ethers.formatEther(amount)} ETH`);
     }
 
+    const proposalCount = await campaign.nextProposalId();
+    console.log(`\n📋 Danh sách đề xuất đã tạo (Tổng số: ${proposalCount}):`);
+    for (let i = 0; i < proposalCount; i++) {
+        const proposal = await campaign.getProposal(i);
+        const voterCount = await campaign.getVoterCount(i);
+        console.log(`- Đề xuất #${i}: Mô tả - ${proposal.description}, Số tiền - ${ethers.formatEther(proposal.amount)} ETH, Người nhận - ${proposal.recipient}, Số phiếu ủng hộ - ${proposal.voteYes}, Số phiếu phản đối - ${proposal.voteNo}, Số người bỏ phiếu - ${voterCount}, Đã thực hiện - ${proposal.executed}`);
+    }
 }
 
-main().catch((error) => {
-    console.error(error);
-    process.exitCode = 1;
-});
+module.exports = info;
+// info(campaignAddress).catch((error) => {
+//     console.error(error);
+//     process.exitCode = 1;
+// });
