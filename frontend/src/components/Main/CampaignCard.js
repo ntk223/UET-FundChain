@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DonateForm from './DonateForm.js';
-import { Target, Calendar, User, CheckCheck, Clock, DollarSign, Users, AlertCircle } from "lucide-react";
+import { Target, Calendar, User, CheckCheck, Clock, DollarSign, Users, AlertCircle, RotateCcw } from "lucide-react";
 import { useCampaign } from '../../hooks/useCampaign.js';
 import { useAuth } from '../../hooks/useAuth.js';
 
@@ -102,9 +102,9 @@ const CampaignCard = ({ campaign }) => {
           <span className="text-sm font-medium">{formatAddress(campaignDetails.owner)}</span>
         </div>
         <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-          status.color === 'green' ? 'bg-green-100 text-green-700 border border-green-200' :
-          status.color === 'red' ? 'bg-red-100 text-red-700 border border-red-200' :
-          'bg-blue-100 text-blue-700 border border-blue-200'
+          status.color === 'green' ? 'bg-green-100 text-green-600 border border-green-200' :
+          status.color === 'red' ? 'bg-red-100 text-red-600 border border-red-200' :
+          'bg-blue-100 text-blue-600 border border-blue-200'
         }`}>
           {status.text}
         </span>
@@ -126,9 +126,9 @@ const CampaignCard = ({ campaign }) => {
         <div className="w-full bg-gray-200 rounded-full h-2">
           <div 
             className={`h-2 rounded-full transition-all duration-500 ${
-              status.color === 'green' ? 'bg-green-500' :
-              status.color === 'red' ? 'bg-red-500' :
-              'bg-blue-500'
+              status.color === 'green' ? 'bg-gradient-to-r from-green-500 to-emerald-500' :
+              status.color === 'red' ? 'bg-gradient-to-r from-red-500 to-rose-500' :
+              'bg-gradient-to-r from-blue-500 to-cyan-500'
             }`}
             style={{ width: `${progressPercentage}%` }}
           ></div>
@@ -139,7 +139,7 @@ const CampaignCard = ({ campaign }) => {
       <div className="space-y-3 flex-1">
         <div className="grid grid-cols-1 gap-3 text-gray-700 text-sm">
           <div className="flex items-center gap-2">
-            <Target className="w-4 h-4 text-purple-500" />
+            <Target className="w-4 h-4 text-orange-500" />
             <span>Mục tiêu: <span className="font-medium text-gray-800">{parseFloat(campaignDetails.targetAmount).toFixed(2)} ETH</span></span>
           </div>
 
@@ -169,20 +169,31 @@ const CampaignCard = ({ campaign }) => {
 
         {/* Action buttons */}
         <div className="flex gap-2">
-          <button
-            onClick={() => navigate(`/campaign/${campaign.address}`)}
-            className="flex-1 px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white rounded-lg font-medium shadow-md hover:shadow-lg transition-all duration-200 text-sm"
-          >
-            Xem Chi Tiết
-          </button>
-          {status.status === 'active' && (
+          {/* Nút Xem Chi Tiết: Tone nhẹ (Secondary) để làm nền cho nút Quyên góp */}
             <button
-              onClick={() => { setShowDonateForm(true); }}
-              className="px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg font-medium shadow-md hover:shadow-lg transition-all duration-200 text-sm"
+              onClick={() => navigate(`/campaign/${campaign.address}`)}
+              className="flex-1 px-4 py-2 bg-orange-50 text-orange-600 border border-orange-100 hover:bg-orange-100 hover:border-orange-200 rounded-xl font-medium transition-all duration-200 text-sm"
             >
-              Donate
+              {status.status === 'failed' ? 'Xem & Hoàn tiền' : 'Xem Chi Tiết'}
             </button>
-          )}
+
+            {/* Nút Quyên góp: Tone Gradient nổi bật (Primary Action) */}
+            {status.status === 'active' && (
+              <button
+                onClick={() => { setShowDonateForm(true); }}
+                className="px-6 py-2 bg-gradient-to-r from-orange-400 to-pink-500 hover:from-orange-500 hover:to-pink-600 text-white rounded-xl font-medium shadow-md shadow-pink-500/20 hover:shadow-pink-500/40 transition-all duration-200 text-sm transform hover:-translate-y-0.5"
+              >
+                Quyên góp
+              </button>
+            )}
+
+            {/* Badge hoàn tiền cho campaign thất bại */}
+            {status.status === 'failed' && (
+              <div className="flex items-center gap-1 px-3 py-2 bg-red-50 text-red-600 rounded-xl text-xs font-medium border border-red-200">
+                <RotateCcw className="w-3 h-3" />
+                Có thể hoàn tiền
+              </div>
+            )}
 
         </div>
           {showDonateForm && (

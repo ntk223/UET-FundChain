@@ -10,7 +10,7 @@ import CreateProposalBanner from './CreateProposalBanner.js';
 import ProposalLoadingState from './ProposalLoadingState.js';
 import EmptyProposalsState from './EmptyProposalsState.js';
 import ProposalsList from './ProposalsList.js';
-const CampaignProposals = ({ campaign, status, onCreateProposal }) => {
+const CampaignProposals = ({ campaign, status, onCreateProposal, onProposalExecuted }) => {
   const { account } = useAuth();
   const { getAllProposals, vote, executeProposal } = useCampaign();
   const [proposals, setProposals] = useState([]);
@@ -29,14 +29,50 @@ const CampaignProposals = ({ campaign, status, onCreateProposal }) => {
         const data = await getAllProposals(campaign.address);
         setProposals(data);
         
-        // Kiểm tra trạng thái vote cho từng proposal
-        if (account && data.length > 0) {
+        console.log('Fetched proposals:', data);
+        
+        // Kiểm tra trạng thái cho từng proposal
+        if (data.length > 0) {
           const votingStatusMap = {};
+          
+          // Lấy donor count một lần
+          const donorCount = await contractService.getDonorCount(campaign.address);
+          
+          console.log('Donor count:', donorCount);
+          
           for (let i = 0; i < data.length; i++) {
-            const hasVoted = await contractService.hasVoted(campaign.address, i, account);
+            // Check hasVoted chỉ khi có account
+            const hasVoted = account 
+              ? await contractService.hasVoted(campaign.address, i, account)
+              : false;
+            
+            // Check canExecute cho tất cả proposals (không phụ thuộc account)
             const canExecute = await contractService.canExecuteProposal(campaign.address, i);
-            votingStatusMap[i] = { hasVoted, canExecute };
+            
+            // Lấy voter count cho proposal này
+            const voterCount = await contractService.getVoterCount(campaign.address, i);
+            
+            // Lấy execution conditions chi tiết
+            const conditions = await contractService.getExecutionConditions(campaign.address, i);
+            
+            console.log(`Proposal #${i} status:`, {
+              hasVoted,
+              canExecute,
+              donorCount,
+              voterCount,
+              conditions
+            });
+            
+            votingStatusMap[i] = { 
+              hasVoted, 
+              canExecute,
+              donorCount: parseInt(donorCount),
+              voterCount: parseInt(voterCount),
+              conditions: conditions || null // Handle null conditions gracefully
+            };
           }
+          
+          console.log('Final votingStatusMap:', votingStatusMap);
           setVotingStatus(votingStatusMap);
         }
       } catch (error) {
@@ -100,7 +136,12 @@ const CampaignProposals = ({ campaign, status, onCreateProposal }) => {
       await executeProposal(campaign.address, proposalId);
       toast.success('Thực hiện đề xuất thành công!');
       
-      // Refresh data
+      // Refresh campaign data to update balance
+      if (onProposalExecuted) {
+        await onProposalExecuted();
+      }
+      
+      // Refresh proposals list
       setTimeout(() => {
         window.location.reload();
       }, 2000);
@@ -115,7 +156,8 @@ const CampaignProposals = ({ campaign, status, onCreateProposal }) => {
 
   // Hiển thị voters modal
   const showVoters = (proposal, proposalId) => {
-    setSelectedProposal({ ...proposal, proposalId });
+    const voterCount = votingStatus[proposalId]?.voterCount || 0;
+    setSelectedProposal({ ...proposal, proposalId, voterCount });
     setShowVotersModal(true);
   };
 
@@ -126,7 +168,7 @@ const CampaignProposals = ({ campaign, status, onCreateProposal }) => {
   return (
     <div className="space-y-4">
       {/* Owner Actions - Create Proposal */}
-      {account === campaign.owner && status.status === 'success' && (
+      {account && campaign.owner && account.toLowerCase() === campaign.owner.toLowerCase() && status.status === 'success' && (
         <CreateProposalBanner onCreateProposal={onCreateProposal} />
       )}
       
@@ -153,6 +195,7 @@ const CampaignProposals = ({ campaign, status, onCreateProposal }) => {
           onClose={() => setShowVotersModal(false)}
           proposal={selectedProposal}
           proposalId={selectedProposal.proposalId}
+          voterCount={selectedProposal.voterCount}
         />
       )}
     </div>

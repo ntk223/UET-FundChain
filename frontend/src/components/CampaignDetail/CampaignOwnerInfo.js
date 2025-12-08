@@ -22,7 +22,7 @@ const CampaignOwnerInfo = ({ campaign }) => {
       {account === campaign.owner && (
         <div className="bg-gradient-to-r from-[#667eea]/10 to-[#764ba2]/10 border border-[#667eea]/30 rounded-lg p-3 backdrop-blur-sm">
           <p className="text-gray-700 text-sm">
-            🎉 Đây là campaign của bạn!
+            🎉 Đây là chiến dịch của bạn!
           </p>
         </div>
       )}

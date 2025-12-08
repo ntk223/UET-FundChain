@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import CreateCampaign from '../components/Main/CreateCampaign.js';
-import {useCampaign } from '../hooks/useCampaign.js';
+import { useCampaign } from '../hooks/useCampaign.js';
 import { useGlobalCampaignEvents } from '../hooks/useEvents.js';
 import Header from '../components/Header/Header.js';
 import Footer from '../components/Footer/Footer.js';
 import CampaignList from '../components/Main/CampaignList.js';
 import ActionButton from '../components/Main/ActionButton.js';
-import Introduce from '../components/Main/Introduce.js';
-// import Statistic from '../components/layout/Statistic.js';
+
 const CampaignPage = () => {
   const [loading, setLoading] = useState(false);
   const {
@@ -34,20 +33,28 @@ const CampaignPage = () => {
     <div className="min-h-screen">
       {/* Header */}
       <Header />
-
+      <br></br>
       {/* Main Content */}
       <main className="container py-8">
-        {/* Welcome Section */}
-        <Introduce/>
-
-        {/* Statistics */}
-        {/* <Statistic stats={stats} /> */}
+        {/* Page Title */}
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold text-gray-800 mb-2">
+            Tất cả chiến dịch
+          </h1>
+          <p className="text-gray-600 text-lg">
+            Khám phá và ủng hộ các chiến dịch đang hoạt động
+          </p>
+        </div>
 
         {/* Action Buttons */}
-        <ActionButton loading={loading} setShowCreateForm={setShowCreateForm} fetchCampaigns={fetchCampaigns} />
+        <ActionButton 
+          loading={loading} 
+          setShowCreateForm={setShowCreateForm} 
+          fetchCampaigns={fetchCampaigns} 
+        />
 
         {/* Campaigns Grid */}
-        <CampaignList campaigns={campaigns} loading={loading}/>
+        <CampaignList campaigns={campaigns} loading={loading} />
       </main>
 
       {/* Create Campaign Modal */}

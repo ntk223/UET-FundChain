@@ -170,20 +170,84 @@ export class CampaignQueries {
     }
   }
 
-  // Kiểm tra proposal có thể execute không (>50% vote yes)
+  // Kiểm tra proposal có thể execute không
+  // Sử dụng các helper functions từ smart contract để code gọn và tối ưu hơn
   async canExecuteProposal(campaignAddress, proposalId) {
     try {
+      const contract = this.helper.getCampaignContract(campaignAddress);
       const proposal = await this.getProposal(campaignAddress, proposalId);
+      
+      // 1. Đã execute rồi thì không thể execute nữa
       if (proposal.executed) return false;
       
-      const totalVotes = parseFloat(proposal.voteYes) + parseFloat(proposal.voteNo);
-      if (totalVotes === 0) return false;
+      // 2. Gọi các helper functions để kiểm tra điều kiện
+      // Tối ưu: gọi parallel để giảm thời gian
+      const [isSuccessful, hasQuorum, isApproved, balance] = await Promise.all([
+        contract.isSuccessful(),      // Kiểm tra đạt target
+        contract.hasQuorum(proposalId),  // Kiểm tra quorum (>50% donors voted)
+        contract.isProposalApproved(proposalId),  // Kiểm tra voteYes > voteNo
+        contract.getBalance()         // Kiểm tra số dư
+      ]);
       
-      const yesPercentage = (parseFloat(proposal.voteYes) / totalVotes) * 100;
-      return yesPercentage > 50;
+      // 3. Campaign phải thành công
+      if (!isSuccessful) return false;
+      
+      // 4. Phải đạt quorum
+      if (!hasQuorum) return false;
+      
+      // 5. Phải được approve (voteYes > voteNo)
+      if (!isApproved) return false;
+      
+      // 7. Phải có đủ tiền để thực thi
+      const amountNeeded = ethers.parseEther(proposal.amount);
+      if (balance < amountNeeded) return false;
+      
+      return true;
     } catch (error) {
       console.error('Lỗi kiểm tra execute condition:', error);
       return false;
+    }
+  }
+
+  // Lấy chi tiết các điều kiện thực thi proposal
+  // Trả về object chứa từng điều kiện để hiển thị chi tiết cho user
+  async getExecutionConditions(campaignAddress, proposalId) {
+    try {
+      const contract = this.helper.getCampaignContract(campaignAddress);
+      const proposal = await this.getProposal(campaignAddress, proposalId);
+      
+      // Gọi parallel để tối ưu
+      const [
+        isSuccessful, 
+        hasQuorum, 
+        isApproved, 
+        balance,
+        progressPercentage
+      ] = await Promise.all([
+        contract.isSuccessful(),
+        contract.hasQuorum(proposalId),
+        contract.isProposalApproved(proposalId),
+        contract.getBalance(),
+        contract.getProgressPercentage()
+      ]);
+      
+      const amountNeeded = ethers.parseEther(proposal.amount);
+      const hasSufficientBalance = balance >= amountNeeded;
+      
+      return {
+        executed: proposal.executed,
+        isSuccessful,
+        hasQuorum,
+        isApproved,
+        hasSufficientBalance,
+        progressPercentage: Number(progressPercentage) / 100, // Convert từ x100 về decimal
+        balance: ethers.formatEther(balance),
+        amountNeeded: proposal.amount,
+        canExecute: !proposal.executed && isSuccessful && hasQuorum && isApproved && hasSufficientBalance
+      };
+    } catch (error) {
+      console.error('Lỗi lấy execution conditions:', error);
+      return null;
     }
   }
 }

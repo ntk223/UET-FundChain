@@ -22,12 +22,12 @@ const CampaignHeader = ({ campaign, status }) => {
     <div className="card">
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 bg-gradient-to-r from-[#667eea] to-[#764ba2] rounded-full flex items-center justify-center">
+          <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-pink-500 rounded-full flex items-center justify-center">
             <User className="w-6 h-6 text-white" />
           </div>
           <div>
             <h1 className="text-2xl font-bold text-gray-800">
-              Campaign của {formatAddress(campaign.owner)}
+              Chiến dịch của {formatAddress(campaign.owner)}
             </h1>
             <p className="text-gray-600">
               Địa chỉ: {formatAddress(campaign.address)}

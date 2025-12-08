@@ -1,5 +1,5 @@
 const { ethers } = require("hardhat");
-
+const {createCampaign} = require("./createCampaign");
 async function main() {
   console.log("🚀 Bắt đầu deploy smart contracts...\n");
 
@@ -30,36 +30,32 @@ async function main() {
     console.log();
 
     // 3. Tạo một campaign mẫu (tùy chọn)
-    const createSampleCampaign = process.env.CREATE_SAMPLE_CAMPAIGN === "true";
+    const createSampleCampaign = true;
     
     if (createSampleCampaign) {
       console.log("🎯 Tạo campaign mẫu...");
-      
-      const beneficiary = deployer.address; // Sử dụng deployer làm beneficiary
-      const targetAmount = ethers.parseEther("5"); // Mục tiêu 5 ETH
-      const durationInDays = 30; // 30 ngày
-      const durationInSeconds = durationInDays * 24 * 60 * 60;
-      
-      console.log("   📋 Thông tin campaign:");
-      console.log("      Beneficiary:", beneficiary);
-      console.log("      Target Amount:", ethers.formatEther(targetAmount), "ETH");
-      console.log("      Duration:", durationInDays, "days");
-      
-      const tx = await factory.createCampaign(
-        beneficiary,
-        targetAmount,
-        durationInSeconds
-      );
-      
-      console.log("   ⏳ Chờ transaction confirm...");
-      const receipt = await tx.wait();
-      
-      // Lấy địa chỉ campaign vừa tạo
-      const campaigns = await factory.getDeployedCampaigns();
-      const campaignAddress = campaigns[0];
-      
-      console.log("   ✅ Campaign mẫu được tạo tại:", campaignAddress);
-      console.log("   🔗 Transaction hash:", receipt.hash);
+      const [owner1, owner2, owner3, owner4, owner5] = await ethers.getSigners();
+      const targetAmount = [ethers.parseEther("100.0"), ethers.parseEther("200.0"), ethers.parseEther("300.0"), ethers.parseEther("400.0"), ethers.parseEther("500.0")];
+      const durationInDays = 10;
+      const durationInSeconds = durationInDays * 24 * 3600;
+      const owners = [owner1.address, owner2.address, owner3.address, owner4.address, owner5.address];
+      const campaignDescriptions = [
+        "Hỗ trợ giáo dục vùng sâu vùng xa",
+        "Cứu trợ thiên tai bão lụt",
+        "Bảo vệ môi trường và động vật hoang dã",
+        "Nâng cao y tế cộng đồng",
+        "Phát triển nghệ thuật và văn hóa"
+      ];
+      for (let i = 0; i < owners.length; i++) {
+        console.log(`   ➡ Tạo campaign cho owner: ${owners[i]}`);
+        const tx = await factory.createCampaign(
+          owners[i],
+          targetAmount[i],
+          durationInSeconds,
+          campaignDescriptions[i]
+        );
+      }
+      console.log("   ✅ Campaign mẫu đã được tạo.");
       console.log();
     }
 
@@ -115,6 +111,7 @@ async function main() {
     process.exit(1);
   }
 }
+
 
 // Thực thi script
 main()

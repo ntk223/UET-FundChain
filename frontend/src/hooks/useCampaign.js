@@ -108,6 +108,28 @@ export const CampaignProvider = ({ children }) => {
     }
   }, []);
 
+  const refund = useCallback(async (campaignAddress) => {
+    try {
+      const tx = await contractService.refund(campaignAddress);
+      toast.success('Hoàn tiền thành công!');
+      return true;
+    } catch (error) {
+      console.error('Lỗi khi refund:', error);
+      toast.error('Hoàn tiền thất bại.');
+      return false;
+    }
+  }, []);
+
+  const getAllCampaigns = useCallback(async () => {
+    try {
+      const campaignList = await contractService.getAllCampaigns();
+      return campaignList;
+    } catch (error) {
+      console.error('Lỗi lấy danh sách campaigns:', error);
+      return [];
+    }
+  }, []);
+
   const contextValue = useMemo(() => ({
     campaigns,
     getCampaignDetails,
@@ -117,8 +139,10 @@ export const CampaignProvider = ({ children }) => {
     createProposal,
     getAllProposals,
     vote,
-    executeProposal
-  }), [campaigns, getCampaignDetails, createCampaign, donate, fetchCampaigns, createProposal, getAllProposals, vote, executeProposal]);
+    executeProposal,
+    refund,
+    getAllCampaigns
+  }), [campaigns, getCampaignDetails, createCampaign, donate, fetchCampaigns, createProposal, getAllProposals, vote, executeProposal, refund, getAllCampaigns]);
 
   return (
     <CampaignContext.Provider value={contextValue}>

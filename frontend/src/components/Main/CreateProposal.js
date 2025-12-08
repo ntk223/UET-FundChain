@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X } from 'lucide-react';
+import { X, Loader2 } from 'lucide-react';
 import { useCampaign } from '../../hooks/useCampaign.js';
 const CreateProposal = ({campaignAddress, onClose}) => {
   const { createProposal } = useCampaign();
@@ -81,9 +81,16 @@ const CreateProposal = ({campaignAddress, onClose}) => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+            className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
           >
-            {loading ? 'Đang tạo...' : 'Tạo Đề Xuất'}
+            {loading ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Đang tạo...
+              </>
+            ) : (
+              'Tạo Đề Xuất'
+            )}
           </button>
         </form>
       </div>

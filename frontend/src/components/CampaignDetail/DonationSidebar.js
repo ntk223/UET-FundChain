@@ -1,5 +1,5 @@
 import React from 'react';
-import { Clock, Heart } from 'lucide-react';
+import { Clock, Heart, Loader2 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth.js';
 
 const DonationSidebar = ({ campaign, status, timeRemaining, onDonate, donating }) => {
@@ -31,8 +31,17 @@ const DonationSidebar = ({ campaign, status, timeRemaining, onDonate, donating }
           disabled={donating}
           className="w-full btn btn-primary disabled:opacity-50"
         >
-          <Heart className="w-5 h-5" />
-          {donating ? 'Đang xử lý...' : 'Đóng góp ngay'}
+          {donating ? (
+            <>
+              <Loader2 className="w-5 h-5 animate-spin" />
+              Đang xử lý...
+            </>
+          ) : (
+            <>
+              <Heart className="w-5 h-5" />
+              Đóng góp ngay
+            </>
+          )}
         </button>
       ) : (
         <div className="text-center">

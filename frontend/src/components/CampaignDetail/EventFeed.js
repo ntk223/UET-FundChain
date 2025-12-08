@@ -23,7 +23,7 @@ const EventFeed = ({ events, isListening, onLoadPastEvents, onClearEvents }) => 
       case 'proposalCreated':
         return <FileText className="w-4 h-4 text-blue-500" />;
       case 'voted':
-        return <Vote className="w-4 h-4 text-purple-500" />;
+        return <Vote className="w-4 h-4 text-orange-500" />;
       case 'proposalExecuted':
         return <CheckCircle className="w-4 h-4 text-emerald-500" />;
       case 'refunded':

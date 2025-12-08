@@ -72,6 +72,10 @@ class ContractService {
     return ethers.formatEther(balance);
   }
 
+  // async getTotalUsed(campaignAddress) {
+  //   await this.ensureInitialized();
+  //   return this.queries.getTotalUsed(campaignAddress);
+  // }
   // Tạo campaign mới
   async createCampaign(owner, targetAmount, durationInDays, campaignDescription) {
     await this.ensureInitialized();
@@ -150,6 +154,38 @@ class ContractService {
   async getAllProposals(campaignAddress) {
     await this.ensureInitialized();
     return this.queries.getAllProposals(campaignAddress);
+  }
+
+  // Kiểm tra user đã vote chưa
+  async hasVoted(campaignAddress, proposalId, voterAddress) {
+    await this.ensureInitialized();
+    return this.queries.hasVoted(campaignAddress, proposalId, voterAddress);
+  }
+
+  // Lấy voter count
+  async getVoterCount(campaignAddress, proposalId) {
+    await this.ensureInitialized();
+    return this.queries.getVoterCount(campaignAddress, proposalId);
+  }
+
+  // Lấy donor count
+  async getDonorCount(campaignAddress) {
+    await this.ensureInitialized();
+    const contract = this.helper.getCampaignContract(campaignAddress);
+    const count = await contract.getDonorCount();
+    return Number(count);
+  }
+
+  // Kiểm tra proposal có thể execute không
+  async canExecuteProposal(campaignAddress, proposalId) {
+    await this.ensureInitialized();
+    return this.queries.canExecuteProposal(campaignAddress, proposalId);
+  }
+
+  // Lấy chi tiết điều kiện thực thi
+  async getExecutionConditions(campaignAddress, proposalId) {
+    await this.ensureInitialized();
+    return this.queries.getExecutionConditions(campaignAddress, proposalId);
   }
 
   // --- EVENT LISTENERS ---

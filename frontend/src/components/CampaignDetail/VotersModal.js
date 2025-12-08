@@ -1,16 +1,52 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Check, X as XIcon } from 'lucide-react';
 
-const VotersModal = ({ isOpen, onClose, proposal, proposalId }) => {
+const VotersModal = ({ isOpen, onClose, proposal, proposalId, voterCount }) => {
+  // Prevent body scroll when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen]);
+
+  // Handle ESC key to close modal
+  useEffect(() => {
+    const handleEscape = (e) => {
+      if (e.key === 'Escape' && isOpen) {
+        onClose();
+      }
+    };
+    
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [isOpen, onClose]);
+
   if (!isOpen || !proposal) return null;
 
   const totalVotes = parseFloat(proposal.voteYes) + parseFloat(proposal.voteNo);
   const yesPercentage = totalVotes > 0 ? (parseFloat(proposal.voteYes) / totalVotes) * 100 : 0;
   const noPercentage = totalVotes > 0 ? (parseFloat(proposal.voteNo) / totalVotes) * 100 : 0;
 
-  return (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 backdrop-blur-sm">
-      <div className="bg-white rounded-xl p-6 max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+  const modalContent = (
+    <div 
+      className="fixed inset-0 bg-black/60 flex items-center justify-center z-[9999] backdrop-blur-sm p-4"
+      onClick={(e) => {
+        // Close modal when clicking backdrop
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
+      }}
+    >
+      <div className="bg-white rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl animate-fadeIn"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
         <div className="flex items-start justify-between mb-6">
           <div>
@@ -39,13 +75,10 @@ const VotersModal = ({ isOpen, onClose, proposal, proposalId }) => {
               <Check className="w-5 h-5 text-green-600" />
               <span className="font-semibold text-green-800">Ủng hộ</span>
             </div>
-            <div className="text-2xl font-bold text-green-800">
-              {parseFloat(proposal.voteYes).toFixed(3)} ETH
+            <div className="text-3xl font-bold text-green-800">
+              {yesPercentage.toFixed(1)}%
             </div>
-            <div className="text-sm text-green-600">
-              {yesPercentage.toFixed(1)}% tổng votes
-            </div>
-            <div className="mt-2 bg-green-200 rounded-full h-2">
+            <div className="mt-3 bg-green-200 rounded-full h-2">
               <div 
                 className="bg-green-500 h-2 rounded-full transition-all"
                 style={{ width: `${yesPercentage}%` }}
@@ -59,13 +92,10 @@ const VotersModal = ({ isOpen, onClose, proposal, proposalId }) => {
               <XIcon className="w-5 h-5 text-red-600" />
               <span className="font-semibold text-red-800">Phản đối</span>
             </div>
-            <div className="text-2xl font-bold text-red-800">
-              {parseFloat(proposal.voteNo).toFixed(3)} ETH
+            <div className="text-3xl font-bold text-red-800">
+              {noPercentage.toFixed(1)}%
             </div>
-            <div className="text-sm text-red-600">
-              {noPercentage.toFixed(1)}% tổng votes
-            </div>
-            <div className="mt-2 bg-red-200 rounded-full h-2">
+            <div className="mt-3 bg-red-200 rounded-full h-2">
               <div 
                 className="bg-red-500 h-2 rounded-full transition-all"
                 style={{ width: `${noPercentage}%` }}
@@ -91,9 +121,9 @@ const VotersModal = ({ isOpen, onClose, proposal, proposalId }) => {
               </div>
             </div>
             <div>
-              <span className="text-gray-600">Tổng votes:</span>
+              <span className="text-gray-600">Số người vote:</span>
               <div className="font-semibold text-gray-800">
-                {totalVotes.toFixed(3)} ETH
+                {proposal.voterCount || 0} người
               </div>
             </div>
             <div>
@@ -142,6 +172,9 @@ const VotersModal = ({ isOpen, onClose, proposal, proposalId }) => {
       </div>
     </div>
   );
+
+  // Render modal using portal to body element
+  return createPortal(modalContent, document.body);
 };
 
 export default VotersModal;

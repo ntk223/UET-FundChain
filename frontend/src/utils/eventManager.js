@@ -1,5 +1,6 @@
 import { ethers } from 'ethers';
 import { CAMPAIGN_ABI } from './constants.js';
+import { EVENT_CONFIG } from './config.js';
 
 /**
  * EventManager - Quản lý việc lắng nghe và xử lý events từ smart contracts
@@ -10,8 +11,8 @@ export class EventManager {
     this.provider = provider;
     this.activePollers = new Map(); // campaignAddress -> { intervalId, lastBlock, callbacks }
     this.globalCallbacks = new Set(); // callbacks cho global events
-    this.pollingInterval = 3000; // 3 giây
-    this.blocksToLookback = 10; // Số blocks để look back khi bắt đầu polling
+    this.pollingInterval = EVENT_CONFIG.POLLING_INTERVAL;
+    this.blocksToLookback = EVENT_CONFIG.BLOCK_LOOKBACK;
   }
 
   /**

@@ -25,6 +25,7 @@ import CampaignStats from '../components/CampaignDetail/CampaignStats.js';
 import CampaignOwnerInfo from '../components/CampaignDetail/CampaignOwnerInfo.js';
 import CampaignDetailLoading from '../components/CampaignDetail/CampaignDetailLoading.js';
 import CampaignNotFound from '../components/CampaignDetail/CampaignNotFound.js';
+import RefundButton from '../components/CampaignDetail/RefundButton.js';
 
 // Import modal components
 import DonateForm from '../components/Main/DonateForm.js';
@@ -180,15 +181,16 @@ const CampaignDetailPage = () => {
   return (
     <div className="min-h-screen">
       <Header />
-      
+      <br></br>
+
       <div className="container py-8">
         {/* Back Button */}
         <button
-          onClick={() => navigate('/')}
-          className="flex items-center gap-2 text-white/80 hover:text-white mb-6 transition-colors"
+          onClick={() => navigate('/campaigns')}
+          className="flex items-center gap-2 text-gray-600 hover:text-orange-500 mb-6 transition-colors"
         >
           <ArrowLeft className="w-5 h-5" />
-          <span>Quay lại danh sách</span>
+          <span>Quay lại danh sách chiến dịch</span>
         </button>
 
         {/* Main Content */}
@@ -219,6 +221,7 @@ const CampaignDetailPage = () => {
                   campaign={campaign} 
                   status={status}
                   onCreateProposal={() => setShowCreateProposal(true)}
+                  onProposalExecuted={loadCampaignDetails}
                 />
               )}
               
@@ -239,6 +242,19 @@ const CampaignDetailPage = () => {
 
           {/* Sidebar - 1/3 width */}
           <div className="space-y-6">
+            {/* Refund Button - Hiển thị khi campaign thất bại */}
+            {status.status === 'failed' && (
+              <RefundButton 
+                campaign={campaign}
+                onRefundSuccess={async () => {
+                  await Promise.all([
+                    loadCampaignDetails(),
+                    loadDonors()
+                  ]);
+                }}
+              />
+            )}
+
             {/* Donation Card */}
             <DonationSidebar 
               campaign={campaign}

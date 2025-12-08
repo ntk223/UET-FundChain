@@ -1,5 +1,5 @@
 import React from 'react';
-import { Check, X, Users, Play } from 'lucide-react';
+import { Check, X, Users, Play, Loader2 } from 'lucide-react';
 
 const ProposalCard = ({
   proposal,
@@ -13,6 +13,14 @@ const ProposalCard = ({
 }) => {
   const totalVotes = parseFloat(proposal.voteYes) + parseFloat(proposal.voteNo);
   const yesPercentage = totalVotes > 0 ? (parseFloat(proposal.voteYes) / totalVotes) * 100 : 0;
+
+  // Debug log
+  console.log(`Proposal #${index}:`, {
+    executed: proposal.executed,
+    isOwner,
+    canExecute: proposalStatus.canExecute,
+    showExecuteButton: !proposal.executed && isOwner
+  });
 
   return (
     <div 
@@ -66,10 +74,10 @@ const ProposalCard = ({
       <div className="mb-4">
         <div className="flex justify-between text-sm text-gray-600 mb-2">
           <span className="transition-all duration-500">
-            Ủng hộ: {parseFloat(proposal.voteYes).toFixed(3)} ETH
+            Ủng hộ: {yesPercentage.toFixed(1)}%
           </span>
           <span className="transition-all duration-500">
-            Phản đối: {parseFloat(proposal.voteNo).toFixed(3)} ETH
+            Phản đối: {(100 - yesPercentage).toFixed(1)}%
           </span>
         </div>
         <div className="w-full bg-gray-200 rounded-full h-3 shadow-inner">
@@ -77,9 +85,6 @@ const ProposalCard = ({
             className="bg-gradient-to-r from-green-400 to-green-500 h-3 rounded-full transition-all duration-700 ease-out shadow-sm"
             style={{ width: `${yesPercentage}%` }}
           />
-        </div>
-        <div className="text-center text-xs text-gray-500 mt-2 transition-all duration-500">
-          {yesPercentage.toFixed(1)}% ủng hộ ({totalVotes.toFixed(3)} ETH tổng votes)
         </div>
       </div>
 
@@ -90,6 +95,74 @@ const ProposalCard = ({
           <span className="text-blue-800 font-medium">
             Bạn đã vote đề xuất này
           </span>
+        </div>
+      )}
+
+      {/* Can Execute Status for Owner */}
+      {!proposal.executed && isOwner && (
+        <div className={`mb-4 p-3 rounded-lg animate-fadeIn ${
+          proposalStatus.canExecute 
+            ? 'bg-green-50 border border-green-200'
+            : 'bg-yellow-50 border border-yellow-200'
+        }`}>
+          {proposalStatus.canExecute ? (
+            <div className="flex items-center gap-2">
+              <Check className="w-5 h-5 text-green-600" />
+              <div>
+                <p className="text-green-800 font-medium">
+                  ✅ Đề xuất đã đủ điều kiện thực thi
+                </p>
+                {proposalStatus.voterCount !== undefined && proposalStatus.donorCount !== undefined && (
+                  <p className="text-green-700 text-xs mt-1">
+                    📊 Quorum: {proposalStatus.voterCount}/{proposalStatus.donorCount} donors đã vote ({((proposalStatus.voterCount / proposalStatus.donorCount) * 100).toFixed(1)}%)
+                  </p>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-start gap-2">
+              <X className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+              <div className="text-yellow-800 text-sm flex-1">
+                <p className="font-medium mb-2">⏳ Các điều kiện thực thi:</p>
+                <ul className="ml-4 space-y-1.5 text-xs">
+                  {proposalStatus.conditions && (
+                    <>
+                      <li className={proposalStatus.conditions.isSuccessful ? 'text-green-700' : 'text-yellow-700'}>
+                        {proposalStatus.conditions.isSuccessful ? '✅' : '⏳'} Chiến dịch đạt mục tiêu
+                        {!proposalStatus.conditions.isSuccessful && proposalStatus.conditions.progressPercentage !== undefined && (
+                          <span className="ml-1 font-semibold">
+                            (hiện tại: {proposalStatus.conditions.progressPercentage.toFixed(1)}%)
+                          </span>
+                        )}
+                      </li>
+                      <li className={proposalStatus.conditions.hasQuorum ? 'text-green-700' : 'text-yellow-700'}>
+                        {proposalStatus.conditions.hasQuorum ? '✅' : '⏳'} Đạt quorum ({'>'} 50% donors vote)
+                        {proposalStatus.voterCount !== undefined && proposalStatus.donorCount !== undefined && (
+                          <span className="ml-1 font-semibold">
+                            - {proposalStatus.voterCount}/{proposalStatus.donorCount} ({((proposalStatus.voterCount / proposalStatus.donorCount) * 100).toFixed(1)}%)
+                          </span>
+                        )}
+                      </li>
+                      <li className={proposalStatus.conditions.isApproved ? 'text-green-700' : 'text-yellow-700'}>
+                        {proposalStatus.conditions.isApproved ? '✅' : '❌'} Phiếu ủng hộ {'>'} Phiếu phản đối
+                        <span className="ml-1 font-semibold">
+                          ({parseFloat(proposal.voteYes).toFixed(2)} vs {parseFloat(proposal.voteNo).toFixed(2)} ETH)
+                        </span>
+                      </li>
+                      <li className={proposalStatus.conditions.hasSufficientBalance ? 'text-green-700' : 'text-red-700'}>
+                        {proposalStatus.conditions.hasSufficientBalance ? '✅' : '❌'} Đủ số dư để thực hiện
+                        {proposalStatus.conditions.balance !== undefined && (
+                          <span className="ml-1 font-semibold">
+                            (cần {proposalStatus.conditions.amountNeeded} ETH, có {parseFloat(proposalStatus.conditions.balance).toFixed(3)} ETH)
+                          </span>
+                        )}
+                      </li>
+                    </>
+                  )}
+                </ul>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -107,7 +180,11 @@ const ProposalCard = ({
                   : 'bg-green-100 hover:bg-green-200 text-green-800 hover:shadow-lg'
               }`}
             >
-              <Check className={`w-4 h-4 transition-all duration-300 ${proposalStatus.voting ? 'animate-spin' : ''}`} />
+              {proposalStatus.voting ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Check className="w-4 h-4" />
+              )}
               {proposalStatus.voting ? 'Đang vote...' : 
                proposalStatus.hasVoted ? 'Đã vote' : 'Ủng hộ'}
             </button>
@@ -121,7 +198,11 @@ const ProposalCard = ({
                   : 'bg-red-100 hover:bg-red-200 text-red-800 hover:shadow-lg'
               }`}
             >
-              <X className={`w-4 h-4 transition-all duration-300 ${proposalStatus.voting ? 'animate-spin' : ''}`} />
+              {proposalStatus.voting ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <X className="w-4 h-4" />
+              )}
               {proposalStatus.voting ? 'Đang vote...' : 
                proposalStatus.hasVoted ? 'Đã vote' : 'Phản đối'}
             </button>
@@ -137,15 +218,25 @@ const ProposalCard = ({
           Chi tiết votes
         </button>
 
-        {/* Execute Button - Only for owner */}
-        {!proposal.executed && isOwner && proposalStatus.canExecute && (
+        {/* Execute Button - Always show for owner */}
+        {isOwner && (
           <button
             onClick={() => onExecute(index)}
-            disabled={executing[index]}
-            className="flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-medium bg-purple-100 hover:bg-purple-200 text-purple-800 transition-all duration-300 transform hover:scale-105 hover:shadow-lg disabled:opacity-60 disabled:hover:scale-100"
+            disabled={proposal.executed || executing[index] || !proposalStatus.canExecute}
+            className={`flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 transform hover:scale-105 hover:shadow-lg ${
+              !proposal.executed && proposalStatus.canExecute && !executing[index]
+                ? 'bg-gradient-to-r from-orange-500 to-pink-500 text-white hover:from-orange-600 hover:to-pink-600'
+                : 'bg-gray-200 text-gray-500 cursor-not-allowed opacity-60'
+            }`}
           >
-            <Play className={`w-4 h-4 transition-all duration-300 ${executing[index] ? 'animate-spin' : ''}`} />
-            {executing[index] ? 'Đang thực hiện...' : 'Thực hiện đề xuất'}
+            {executing[index] ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Play className="w-4 h-4" />
+            )}
+            {executing[index] ? 'Đang thực hiện...' : 
+             proposal.executed ? 'Đã thực hiện' :
+             proposalStatus.canExecute ? 'Thực hiện đề xuất' : 'Chưa đủ điều kiện'}
           </button>
         )}
       </div>
