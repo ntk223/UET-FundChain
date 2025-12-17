@@ -59,6 +59,12 @@ class ContractService {
     }
   }
 
+  // Lấy blockchain timestamp hiện tại
+  async getBlockchainTime() {
+    await this.ensureInitialized();
+    return this.helper.getBlockchainTime();
+  }
+
   // Lấy thông tin account
   async getAccount() {
     await this.ensureInitialized();

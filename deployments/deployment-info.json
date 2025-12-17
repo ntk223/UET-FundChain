@@ -3,9 +3,13 @@
   "chainId": "31337",
   "contracts": {
     "CampaignFactory": {
-      "address": "0x1613beB3B2C4f22Ee086B2b38C1476A3cE7f78E8",
+      "address": "0x36C02dA8a0983159322a80FFE9F24b1acfF8B570",
       "deployer": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
-      "deployedAt": "2025-12-08T16:25:13.162Z"
+      "deployedAt": "2025-12-17T16:17:54.393Z"
     }
+  },
+  "campaigns": {
+    "total": 6,
+    "expiredCampaignForRefund": "0x413DFAc1Ca0E16F37EA8D4De2cc0873108DEEb92"
   }
 }

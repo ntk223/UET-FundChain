@@ -10,6 +10,8 @@ const RefundButton = ({ campaign, onRefundSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [userContribution, setUserContribution] = useState('0');
   const [loadingContribution, setLoadingContribution] = useState(true);
+  const [canShowRefund, setCanShowRefund] = useState(false);
+  const [checkingRefundCondition, setCheckingRefundCondition] = useState(true);
 
   // Load user contribution từ smart contract
   useEffect(() => {
@@ -35,21 +37,40 @@ const RefundButton = ({ campaign, onRefundSuccess }) => {
     loadUserContribution();
   }, [campaign?.address, account]);
 
-  // Kiểm tra điều kiện refund
-  const canRefund = () => {
-    if (!campaign) return false;
-    
-    const now = Date.now() / 1000;
-    const deadline = parseInt(campaign.deadline);
-    const targetAmount = parseFloat(campaign.targetAmount);
-    const totalRaised = parseFloat(campaign.totalRaised);
-    
-    // Chỉ refund khi: campaign đã kết thúc VÀ không đạt target
-    const campaignEnded = now > deadline;
-    const campaignFailed = totalRaised < targetAmount;
-    
-    return campaignEnded && campaignFailed;
-  };
+  // Kiểm tra điều kiện refund từ blockchain
+  useEffect(() => {
+    const checkRefundCondition = async () => {
+      if (!campaign?.address) {
+        setCanShowRefund(false);
+        setCheckingRefundCondition(false);
+        return;
+      }
+
+      try {
+        setCheckingRefundCondition(true);
+        
+        // Gọi smart contract để kiểm tra - dùng blockchain time
+        const campaignContract = contractService.helper.getCampaignContract(campaign.address);
+        const [isEnded, isSuccessful] = await Promise.all([
+          campaignContract.isEnded(),
+          campaignContract.isSuccessful()
+        ]);
+
+        // Chỉ refund khi: campaign đã kết thúc VÀ KHÔNG thành công
+        const canRefund = isEnded && !isSuccessful;
+        setCanShowRefund(canRefund);
+        
+        console.log('Refund conditions:', { isEnded, isSuccessful, canRefund });
+      } catch (error) {
+        console.error('Lỗi kiểm tra refund condition:', error);
+        setCanShowRefund(false);
+      } finally {
+        setCheckingRefundCondition(false);
+      }
+    };
+
+    checkRefundCondition();
+  }, [campaign?.address]);
 
   // Kiểm tra user có contribution không
   const hasContribution = parseFloat(userContribution) > 0;
@@ -77,17 +98,19 @@ const RefundButton = ({ campaign, onRefundSuccess }) => {
   };
 
   // Không hiển thị button nếu không đủ điều kiện refund
-  if (!canRefund()) {
+  if (!canShowRefund) {
     return null;
   }
 
-  // Hiển thị loading khi đang tải contribution
-  if (loadingContribution) {
+  // Hiển thị loading khi đang kiểm tra hoặc tải contribution
+  if (checkingRefundCondition || loadingContribution) {
     return (
       <div className="bg-gray-50 border border-gray-200 rounded-xl p-6">
         <div className="flex items-center justify-center gap-2">
           <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
-          <span className="text-sm text-gray-600">Đang kiểm tra đóng góp...</span>
+          <span className="text-sm text-gray-600">
+            {checkingRefundCondition ? 'Đang kiểm tra điều kiện hoàn tiền...' : 'Đang kiểm tra đóng góp...'}
+          </span>
         </div>
       </div>
     );

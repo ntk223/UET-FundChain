@@ -1,6 +1,6 @@
 export const CONTRACT_ADDRESSES = {
   // Thay đổi địa chỉ này khi deploy contract
-  CAMPAIGN_FACTORY: "0x1613beB3B2C4f22Ee086B2b38C1476A3cE7f78E8"
+  CAMPAIGN_FACTORY: "0x36C02dA8a0983159322a80FFE9F24b1acfF8B570"
 };
 
 export const CAMPAIGN_ABI = [

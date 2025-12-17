@@ -8,7 +8,7 @@
     "test:verbose": "hardhat test --verbose",
     "test:gas": "REPORT_GAS=true hardhat test",
     "compile": "hardhat compile",
-    "deploy:local": "hardhat run scripts/deploy.js --network localhost",
+    "deploy": "hardhat run scripts/deploy.js --network localhost",
     "deploy:sample": "CREATE_SAMPLE_CAMPAIGN=true hardhat run scripts/deploy.js --network localhost",
     "interact": "hardhat run scripts/interact.js --network localhost",
     "donate": "hardhat run scripts/donate.js --network localhost",
@@ -20,7 +20,7 @@
     "testscript": "hardhat run scripts/index.js --network localhost",
     "node": "hardhat node",
     "frontend:install": "cd frontend && npm install",
-    "frontend:start": "cd frontend && npm start",
+    "frontend": "cd frontend && npm start",
     "frontend:build": "cd frontend && npm run build"
   },
   "keywords": [],

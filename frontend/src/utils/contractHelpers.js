@@ -7,6 +7,18 @@ export class ContractHelper {
     this.signer = signer;
   }
 
+  // Lấy blockchain timestamp hiện tại
+  async getBlockchainTime() {
+    try {
+      const block = await this.provider.getBlock('latest');
+      return block.timestamp;
+    } catch (error) {
+      console.error('Error getting blockchain time:', error);
+      // Fallback to Date.now() if error
+      return Math.floor(Date.now() / 1000);
+    }
+  }
+
   // Tạo factory contract instance
   getFactoryContract() {
     return new ethers.Contract(

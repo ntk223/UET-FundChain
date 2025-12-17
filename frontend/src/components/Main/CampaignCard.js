@@ -11,6 +11,7 @@ const CampaignCard = ({ campaign }) => {
   const { getCampaignDetails } = useCampaign();
   const [campaignDetails, setCampaignDetails] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [blockchainTime, setBlockchainTime] = useState(null);
   const [showDonateForm, setShowDonateForm] = useState(false);
 
   useEffect(() => {
@@ -31,6 +32,24 @@ const CampaignCard = ({ campaign }) => {
     loadCampaignDetails();
   }, [campaign?.address, getCampaignDetails]);
 
+  // Lấy blockchain time
+  useEffect(() => {
+    const fetchBlockchainTime = async () => {
+      try {
+        const contractService = (await import('../../utils/contractService.js')).default;
+        const time = await contractService.getBlockchainTime();
+        setBlockchainTime(time);
+      } catch (error) {
+        console.error('Error getting blockchain time:', error);
+      }
+    };
+
+    fetchBlockchainTime();
+    // Update mỗi 30 giây
+    const interval = setInterval(fetchBlockchainTime, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
   // Tính toán phần trăm hoàn thành
   const getProgressPercentage = () => {
     if (!campaignDetails) return 0;
@@ -40,9 +59,9 @@ const CampaignCard = ({ campaign }) => {
 
   // Kiểm tra trạng thái campaign
   const getCampaignStatus = () => {
-    if (!campaignDetails) return { status: 'loading', color: 'gray', text: 'Đang tải...' };
+    if (!campaignDetails || blockchainTime === null) return { status: 'loading', color: 'gray', text: 'Đang tải...' };
     
-    const now = Date.now() / 1000;
+    const now = blockchainTime;
     const deadline = parseInt(campaignDetails.deadline);
     const targetAmount = parseFloat(campaignDetails.targetAmount);
     const totalRaised = parseFloat(campaignDetails.totalRaised);
@@ -58,9 +77,9 @@ const CampaignCard = ({ campaign }) => {
 
   // Tính thời gian còn lại
   const getTimeRemaining = () => {
-    if (!campaignDetails) return '';
+    if (!campaignDetails || blockchainTime === null) return '';
     
-    const now = Date.now() / 1000;
+    const now = blockchainTime;
     const deadline = parseInt(campaignDetails.deadline);
     const timeLeft = deadline - now;
 

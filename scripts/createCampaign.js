@@ -1,13 +1,13 @@
 const {ethers} = require("hardhat");
 
 async function createCampaign() {
-    const campaignFactoryAddress = "0x0165878A594ca255338adfa4d48449f69242Eb8F";
+    const campaignFactoryAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
     const [owner] = await ethers.getSigners();
     const factory = await ethers.getContractAt("CampaignFactory", campaignFactoryAddress);
 
     const beneficiary = owner.address;
     const targetAmount = ethers.parseEther("300.0");
-    const durationInSeconds = 3600; // 1 hour
+    const durationInSeconds = 60; // 1 hour
     const campaignDescription = "This is a sample campaign description.";
 
     const tx = await factory.createCampaign(
@@ -24,9 +24,9 @@ async function createCampaign() {
     return newCampaignAddress;
 }
 
-module.exports = createCampaign;
+// module.exports = createCampaign;
 
-// createCampaign().catch((error) => {
-//     console.error(error);
-//     process.exitCode = 1;
-// });
+createCampaign().catch((error) => {
+    console.error(error);
+    process.exitCode = 1;
+});

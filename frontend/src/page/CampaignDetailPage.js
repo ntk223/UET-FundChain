@@ -85,10 +85,30 @@ const CampaignDetailPage = () => {
     return Math.min(percentage, 100);
   }, [campaign?.totalRaised, campaign?.targetAmount]);
 
+  // State cho blockchain time
+  const [blockchainTime, setBlockchainTime] = useState(null);
+
+  // Lấy blockchain time
+  useEffect(() => {
+    const fetchBlockchainTime = async () => {
+      try {
+        const time = await contractService.getBlockchainTime();
+        setBlockchainTime(time);
+      } catch (error) {
+        console.error('Error getting blockchain time:', error);
+      }
+    };
+
+    fetchBlockchainTime();
+    // Update mỗi 10 giây
+    const interval = setInterval(fetchBlockchainTime, 10000);
+    return () => clearInterval(interval);
+  }, []);
+
   const status = useMemo(() => {
-    if (!campaign) return { status: 'loading', color: 'gray', text: 'Đang tải...' };
+    if (!campaign || blockchainTime === null) return { status: 'loading', color: 'gray', text: 'Đang tải...' };
     
-    const now = Date.now() / 1000;
+    const now = blockchainTime;
     const deadline = parseInt(campaign.deadline);
     const targetAmount = parseFloat(campaign.targetAmount);
     const totalRaised = parseFloat(campaign.totalRaised);
@@ -100,12 +120,12 @@ const CampaignDetailPage = () => {
     } else {
       return { status: 'active', color: 'blue', text: 'Đang hoạt động' };
     }
-  }, [campaign?.deadline, campaign?.targetAmount, campaign?.totalRaised]);
+  }, [campaign?.deadline, campaign?.targetAmount, campaign?.totalRaised, blockchainTime]);
 
   const timeRemaining = useMemo(() => {
-    if (!campaign) return '';
+    if (!campaign || blockchainTime === null) return '';
     
-    const now = Date.now() / 1000;
+    const now = blockchainTime;
     const deadline = parseInt(campaign.deadline);
     const timeLeft = deadline - now;
 
